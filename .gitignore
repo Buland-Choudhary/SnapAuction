@@ -1,0 +1,56 @@
+# Ignore node_modules in all folders
+**/node_modules/
+
+# Logs
+**/logs/
+**/*.log
+**/npm-debug.log*
+
+# Dependency directories
+**/jspm_packages/
+**/.pnp/
+**/.pnp.js
+
+# dotenv environment variables
+**/.env
+**/.env.* 
+
+# Build output
+**/dist/
+**/build/
+
+# VS Code settings
+**/.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Optional: ignore test coverage and reports
+**/coverage/
+**/reports/
+
+# Optional: Next.js or other framework-specific
+**/.next/
+**/.turbo/
+**/out/
+
+# Optional: Yarn and pnpm stuff
+**/.yarn/
+**/.yarnrc.yml
+**/.pnp.*
+**/pnpm-lock.yaml
+
+# Optional: local dev databases
+**/*.sqlite
+**/*.db
+
+# Optional: IDEs
+.idea/
+*.iml
+
+# Optional: temporary files
+*.swp
+*.swo
+*.bak
+*.tmp
