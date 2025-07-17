@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  role           Role     @default(USER)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  auctions       Auction[]       @relation("SellerAuctions")
+  wonAuctions    Auction[]       @relation("WonAuctions") // ✅ Add this line
+  bids           Bid[]
+  follows        Follow[]
+}
+
+model Auction {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  basePrice     Float
+  currentPrice  Float     @default(0)
+  minIncrement  Float     @default(1)
+  maxIncrement  Float?    
+  startTime     DateTime
+  endTime       DateTime
+  isClosed      Boolean   @default(false)
+  sellerId      String
+  winnerId      String?   
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  seller        User      @relation("SellerAuctions", fields: [sellerId], references: [id])
+  winner        User?     @relation("WonAuctions", fields: [winnerId], references: [id]) // ✅ Correct now
+  bids          Bid[]
+  follows       Follow[]
+  images        AuctionImage[]
+}
+
+model Bid {
+  id         String   @id @default(cuid())
+  amount     Float
+  createdAt  DateTime @default(now())
+  auctionId  String
+  userId     String
+
+  auction    Auction  @relation(fields: [auctionId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Follow {
+  id         String   @id @default(cuid())
+  userId     String
+  auctionId  String
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  auction    Auction  @relation(fields: [auctionId], references: [id])
+}
+
+model AuctionImage {
+  id         String   @id @default(cuid())
+  url        String
+  auctionId  String
+
+  auction    Auction  @relation(fields: [auctionId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
