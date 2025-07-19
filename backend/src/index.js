@@ -8,6 +8,7 @@ import userRoutes from './routes/users.js';
 import auctionRoutes from './routes/auctions.js';
 import bidRoutes from './routes/bids.js';
 import adminRoutes from './routes/admin.js';
+import uploadsRouter from './routes/uploads.js';
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auctions', auctionRoutes);
 app.use('/api/bids', bidRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/uploads', uploadsRouter);
 
 // Default
 app.get('/', (req, res) => res.send('SnapAuction API Running'));

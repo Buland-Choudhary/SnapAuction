@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
+const SALT_ROUNDS = 10;
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -20,7 +21,7 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
     );
-    console.log('user logged in:', user.name);
+    console.log('✅ User logged in:', user.name);
 
     res.json({
       token,
@@ -32,16 +33,56 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
+export const signup = async (req, res) => {
+  const { name, email, password } = req.body;
+  console.log('🆕 Attempting signup for:', name, email);
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
 
-export const signup = (req, res) => {
-  res.json({ message: 'TODO: Signup logic' });
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+        role: 'USER', // or allow override from req.body with proper validation
+      },
+    });
+
+    const token = jwt.sign(
+      { id: newUser.id, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
+    );
+
+    console.log('✅ User signed up:', newUser.name);
+
+    res.status(201).json({
+      token,
+      user: {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Signup error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 export const logout = (req, res) => {
-  res.json({ message: 'TODO: Logout logic' });
+  // JWT-based auth is stateless; client can just discard the token
+  // You could implement token blacklisting if needed (advanced)
+  res.json({ message: 'User logged out (client should delete token)' });
 };

@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import AuctionDetail from "./pages/AuctionDetail";
 import Navbar from "./components/navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CreateAuction from "./pages/CreateAuction";
 
 const App = () => {
   return (
@@ -25,6 +26,10 @@ const App = () => {
                 <Dashboard />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/create-auction"
+            element={<ProtectedRoute><CreateAuction /></ProtectedRoute>}
           />
           <Route path="*" element={<div className="p-6">404 Not Found</div>} />
         </Routes>

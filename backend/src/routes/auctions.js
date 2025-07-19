@@ -9,6 +9,7 @@ import {
   unfollowAuction,
 } from '../controllers/auctions.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/upcoming', getUpcoming);  // List upcoming auctions
 router.get('/:id', getById);           // Get auction details by ID
 
 // Protected routes
-router.post('/', authMiddleware, createAuction);                  // Create auction
+router.post('/', authMiddleware, upload.array('images', 5), createAuction);                  // Create auction
 router.post('/:id/follow', authMiddleware, followAuction);        // Follow auction
 router.delete('/:id/unfollow', authMiddleware, unfollowAuction);  // Unfollow auction
 
