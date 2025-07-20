@@ -1,90 +1,121 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import axios from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+
+const fetchAuction = async (id) => {
+  const response = await axios.get(`/auctions/${id}`);
+  return {
+    ...response.data,
+    startTime: new Date(response.data.startTime).toLocaleString(),
+    endTime: new Date(response.data.endTime).toLocaleString(),
+    bids: response.data.bids.map((b) => ({
+      ...b,
+      createdAt: new Date(b.createdAt).toLocaleString(),
+    })),
+  };
+};
+
+const placeBidAPI = async ({ auctionId, amount }) => {
+  const response = await axios.post("/bids", {
+    auctionId,
+    amount: parseFloat(amount),
+  });
+  return response.data;
+};
+
+const toggleFollowAPI = async ({ auctionId, isFollowing }) => {
+  if (isFollowing) {
+    await axios.delete(`/auctions/${auctionId}/unfollow`);
+    return false;
+  } else {
+    await axios.post(`/auctions/${auctionId}/follow`);
+    return true;
+  }
+};
 
 export default function AuctionDetail() {
   const { id } = useParams();
   const { user } = useAuth();
-  const [auction, setAuction] = useState(null);
+  const queryClient = useQueryClient();
   const [bidAmount, setBidAmount] = useState("");
   const [bidError, setBidError] = useState("");
   const [bidSuccess, setBidSuccess] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
 
-  useEffect(() => {
-    fetchAuction();
-  }, [id]);
+  // Fetch auction with caching
+  const {
+    data: auction,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["auction", id],
+    queryFn: () => fetchAuction(id),
+    staleTime: 30 * 1000, // 30 seconds for auction details (more frequent for live bidding)
+    enabled: !!id,
+  });
 
-  const fetchAuction = async () => {
-    try {
-      const res = await axios.get(`/auctions/${id}`);
-      setAuction({
-        ...res.data,
-        startTime: new Date(res.data.startTime).toLocaleString(),
-        endTime: new Date(res.data.endTime).toLocaleString(),
-        bids: res.data.bids.map((b) => ({
-          ...b,
-          createdAt: new Date(b.createdAt).toLocaleString(),
-        })),
-      });
-
+  // Place bid mutation
+  const placeBidMutation = useMutation({
+    mutationFn: placeBidAPI,
+    onSuccess: (data) => {
+      setBidSuccess("Bid placed successfully!");
+      setBidError("");
       
-      // Check if user is following this auction
-      if (user) {
-        const userFollow = res.data.follows.find(f => f.userId === user.id);
-        setIsFollowing(!!userFollow);
-      }
+      // Invalidate and refetch auction data to show new bid
+      queryClient.invalidateQueries({ queryKey: ["auction", id] });
       
-      // Set suggested bid amount
-      const suggestedBid = res.data.currentPrice + res.data.minIncrement;
+      // Update bid amount to new minimum
+      const newMinBid = data.newCurrentPrice + auction.minIncrement;
+      setBidAmount(newMinBid.toString());
+    },
+    onError: (error) => {
+      setBidError(error.response?.data?.message || "Failed to place bid");
+      setBidSuccess("");
+    },
+  });
+
+  // Follow/unfollow mutation
+  const followMutation = useMutation({
+    mutationFn: toggleFollowAPI,
+    onSuccess: () => {
+      // Optimistically update the cache
+      queryClient.invalidateQueries({ queryKey: ["auction", id] });
+      // Also invalidate dashboard to update followed auctions
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (error) => {
+      console.error("Failed to toggle follow:", error);
+    },
+  });
+
+  // Set initial bid amount when auction loads
+  useState(() => {
+    if (auction) {
+      const suggestedBid = auction.currentPrice + auction.minIncrement;
       setBidAmount(suggestedBid.toString());
-    } catch (err) {
-      console.error("Failed to fetch auction:", err);
     }
-  };
+  }, [auction]);
 
   const handlePlaceBid = async (e) => {
     e.preventDefault();
     setBidError("");
     setBidSuccess("");
-    setIsSubmitting(true);
 
-    try {
-      const response = await axios.post("/bids", {
-        auctionId: id,
-        amount: parseFloat(bidAmount),
-      });
-
-      setBidSuccess("Bid placed successfully!");
-      
-      // Refresh auction data to show new bid
-      await fetchAuction();
-      
-      // Update bid amount to new minimum
-      const newMinBid = response.data.newCurrentPrice + auction.minIncrement;
-      setBidAmount(newMinBid.toString());
-
-    } catch (err) {
-      setBidError(err.response?.data?.message || "Failed to place bid");
-    } finally {
-      setIsSubmitting(false);
-    }
+    placeBidMutation.mutate({
+      auctionId: id,
+      amount: bidAmount,
+    });
   };
 
-  const handleFollowToggle = async () => {
-    try {
-      if (isFollowing) {
-        await axios.delete(`/auctions/${id}/unfollow`);
-        setIsFollowing(false);
-      } else {
-        await axios.post(`/auctions/${id}/follow`);
-        setIsFollowing(true);
-      }
-    } catch (err) {
-      console.error("Failed to toggle follow:", err);
-    }
+  const handleFollowToggle = () => {
+    if (!auction || !user) return;
+    
+    const isFollowing = auction.follows.some(f => f.userId === user.id);
+    followMutation.mutate({
+      auctionId: id,
+      isFollowing,
+    });
   };
 
   const isAuctionLive = () => {
@@ -107,15 +138,34 @@ export default function AuctionDetail() {
     return true;
   };
 
-  const getBidRestrictionMessage = () => {
-    if (!user) return "Please log in to place bids";
-    if (!isAuctionLive()) return "Auction is not currently live";
-    if (auction.sellerId === user.id) return "You cannot bid on your own auction";
-    if (auction.bids.length > 0 && auction.bids[0].userId === user.id) {
+    const getBidRestrictionMessage = () => {
+    if (!user) 
+      return "Please log in to place bids";
+
+    // we know auction is loaded here
+    const now   = new Date();
+    const start = new Date(auction.startTime);
+    const end   = new Date(auction.endTime);
+
+    if (now < start) 
+      return "The auction has not started yet.";
+    if (auction.isClosed || now > end) 
+      return "The auction has already ended.";
+
+    if (auction.sellerId === user.id) 
+      return "You cannot bid on your own auction.";
+
+    if (
+      auction.bids.length > 0 && 
+      auction.bids[0].userId === user.id
+    ) {
       return "You have the current highest bid. Wait for another user to bid.";
     }
+
+    // if we reach here, user *can* bid
     return "";
   };
+
 
   const getAuctionStatus = () => {
     if (!auction) return "";
@@ -130,15 +180,34 @@ export default function AuctionDetail() {
     return "Live";
   };
 
-  if (!auction) return (
+  // Loading state
+  if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white">
       <p className="text-lg font-medium">Loading auction...</p>
     </div>
   );
 
+  // Error state
+  if (error) return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white">
+      <div className="text-center">
+        <p className="text-lg font-medium text-red-400">Failed to load auction</p>
+        <button 
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["auction", id] })}
+          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+
+  if (!auction) return null;
+
   const status = getAuctionStatus();
   const minBidAmount = auction.currentPrice + auction.minIncrement;
   const restrictionMessage = getBidRestrictionMessage();
+  const isFollowing = user && auction.follows.some(f => f.userId === user.id);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white px-4 py-10">
@@ -189,7 +258,7 @@ export default function AuctionDetail() {
                   </label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     min={minBidAmount}
                     value={bidAmount}
                     onChange={(e) => setBidAmount(e.target.value)}
@@ -201,10 +270,10 @@ export default function AuctionDetail() {
                 {bidSuccess && <p className="text-sm text-green-600">{bidSuccess}</p>}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={placeBidMutation.isPending}
                   className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded-xl transition-all disabled:opacity-50"
                 >
-                  {isSubmitting ? "Placing Bid..." : "Place Bid"}
+                  {placeBidMutation.isPending ? "Placing Bid..." : "Place Bid"}
                 </button>
               </form>
             </div>
@@ -228,13 +297,17 @@ export default function AuctionDetail() {
             <div className="border rounded-xl p-4 bg-yellow-50">
               <button
                 onClick={handleFollowToggle}
-                className={`w-full text-white py-2 rounded-xl font-semibold transition-all ${
+                disabled={followMutation.isPending}
+                className={`w-full text-white py-2 rounded-xl font-semibold transition-all disabled:opacity-50 ${
                   isFollowing 
                     ? 'bg-gray-600 hover:bg-gray-700' 
                     : 'bg-yellow-500 hover:bg-yellow-600'
                 }`}
               >
-                {isFollowing ? 'Unfollow Auction' : 'Follow Auction'}
+                {followMutation.isPending 
+                  ? (isFollowing ? 'Unfollowing...' : 'Following...') 
+                  : (isFollowing ? 'Unfollow Auction' : 'Follow Auction')
+                }
               </button>
             </div>
           )}

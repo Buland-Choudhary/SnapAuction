@@ -1,20 +1,23 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from '../api/axios';
+import { useAuth } from '../context/AuthContext';        // ← pull in your context
+import { Link } from 'react-router-dom';
 
 const Login = () => {
+  const { login } = useAuth();                           // ← grab the login fn
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const res = await axios.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      navigate('/dashboard');
+      // hand off to your AuthContext.login()
+      await login(email, password);
+      // no need to navigate or write to localStorage here—
+      // AuthContext.login does that and moves you to /dashboard
     } catch (err) {
+      // AuthContext.login will throw if axios fails
       setError(err.response?.data?.message || 'Login failed');
     }
   };
@@ -22,10 +25,14 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">Welcome Back</h2>
+        <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
+          Welcome Back
+        </h2>
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <input
               className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600"
               type="email"
@@ -37,7 +44,9 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600"
               type="password"
@@ -60,9 +69,9 @@ const Login = () => {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Don’t have an account?{' '}
-          <a href="/signup" className="text-blue-600 hover:underline font-medium">
+          <Link to="/signup" className="text-blue-600 hover:underline font-medium">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>
