@@ -13,14 +13,14 @@ export const AuthProvider = ({ children }) => {
     const res = await axios.post("/auth/login", { email, password });
     localStorage.setItem("token", res.data.token);
     setUser(res.data.user);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   const signup = async (name, email, password) => {
     const res = await axios.post("/auth/signup", { name, email, password });
     localStorage.setItem("token", res.data.token);
     setUser(res.data.user);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   const logout = () => {

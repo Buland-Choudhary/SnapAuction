@@ -15,7 +15,7 @@ export default function Signup() {
     e.preventDefault();
     try {
       await signup(name, email, password);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       setError(err.message || "Signup failed");
     }

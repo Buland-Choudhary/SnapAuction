@@ -50,30 +50,30 @@ export const placeBid = async (req, res) => {
     if (auction.sellerId === userId) {
       return res.status(400).json({ message: 'Cannot bid on your own auction' });
     }
+
     // Check if the latest bid is from the same user
     if (auction.bids.length > 0 && auction.bids[0].userId === userId) {
       return res.status(400).json({ message: 'Cannot place consecutive bids. Wait for another user to bid first.' });
     }
 
     // Validate bid amount
-    const currentHighestBid = auction.bids.length > 0 ? auction.bids[0].amount : auction.basePrice;
-    const minimumBid = currentHighestBid + auction.minIncrement;
-
-    if (bidAmount < minimumBid) {
-      return res.status(400).json({ 
-        message: `Bid must be at least $${minimumBid} (current: $${currentHighestBid} + minimum increment: $${auction.minIncrement})` 
-      });
+    const currentPrice = auction.currentPrice || auction.basePrice;
+    const minBid = currentPrice + auction.minIncrement;
+    if (bidAmount < minBid) {
+      return res.status(400).json({ message: `Bid must be at least $${minBid}` });
     }
 
-    // Check maximum increment if set
-    if (auction.maxIncrement && bidAmount > currentHighestBid + auction.maxIncrement) {
-      return res.status(400).json({ 
-        message: `Bid cannot exceed maximum increment of $${auction.maxIncrement}` 
-      });
+    // Check max increment if specified
+    if (auction.maxIncrement) {
+      const increment = bidAmount - currentPrice;
+      if (increment > auction.maxIncrement) {
+        return res.status(400).json({ 
+          message: `Bid increment cannot exceed $${auction.maxIncrement}` 
+        });
+      }
     }
 
     // Create the bid
-    console.log("userId", userId);
     const bid = await prisma.bid.create({
       data: {
         amount: bidAmount,
@@ -92,9 +92,6 @@ export const placeBid = async (req, res) => {
       data: { currentPrice: bidAmount },
     });
 
-    // TODO: Emit real-time update via Socket.IO
-    // io.to(auctionId).emit('bid_placed', { bid, newCurrentPrice: bidAmount });
-
     res.status(201).json({
       message: 'Bid placed successfully',
       bid,
@@ -109,35 +106,19 @@ export const placeBid = async (req, res) => {
 
 export const getAuctionBids = async (req, res) => {
   try {
-    const { id: auctionId } = req.params;
-
-    // Get auction with all its bids
-    const auction = await prisma.auction.findUnique({
-      where: { id: auctionId },
+    const { id } = req.params;
+    
+    const bids = await prisma.bid.findMany({
+      where: { auctionId: id },
       include: {
-        bids: {
-          include: {
-            user: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
+        user: { select: { id: true, name: true } },
       },
+      orderBy: { amount: 'desc' },
     });
 
-    if (!auction) {
-      return res.status(404).json({ message: 'Auction not found' });
-    }
-
-    res.json({
-      auctionId,
-      bids: auction.bids,
-      totalBids: auction.bids.length,
-      currentPrice: auction.currentPrice,
-      basePrice: auction.basePrice,
-    });
-
+    res.json(bids);
   } catch (err) {
-    console.error('❌ getAuctionBids error:', err);
+    console.error('❌ Failed to fetch auction bids:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

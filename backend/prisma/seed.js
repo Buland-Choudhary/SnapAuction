@@ -107,15 +107,15 @@ async function main() {
     },
     // Past auctions
     {
-      title: 'Antique Vase',
-      description: 'Ming dynasty era.',
+      title: 'White Vase',
+      description: 'Small beautiful vase, perfect for decor.',
       basePrice: 300,
       minIncrement: 15,
       startTime: daysAgo(5),
       endTime: daysAgo(1),
       isClosed: true,
       sellerId: users[4].id,
-      images: ['https://picsum.photos/400/300'],
+      images: ['https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005620/antiqueVase_xgbvm1.jpg'],
       winnerId: users[5].id,
     },
     {
@@ -127,7 +127,7 @@ async function main() {
       endTime: minutesAgo(10),
       isClosed: true,
       sellerId: users[5].id,
-      images: ['https://picsum.photos/400/300'],
+      images: ['https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005617/wirelessHeadphones1_ditgch.jpg', 'https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005616/wirelessHeadphones2_rzgtmv.jpg', 'https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005615/headphones3_ysdosi.jpg'],
       winnerId: users[0].id,
     },
   ];

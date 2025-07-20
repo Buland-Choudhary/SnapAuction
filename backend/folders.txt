@@ -1,13 +1,14 @@
 .:
-echo
-files.txt
 folders.txt
 node_modules
 package.json
 package-lock.json
 prisma
+sample.jpg
 src
 testPrismaConnection.js
+tmp_uploads
+uploads
 
 ./prisma:
 schema.prisma
@@ -25,6 +26,7 @@ sockets
 utils
 
 ./src/config:
+cloudinary.js
 
 ./src/controllers:
 admin.js
@@ -66,12 +68,14 @@ wasm-engine-edge.js
 
 ./src/middleware:
 auth.js
+upload.js
 
 ./src/routes:
 admin.js
 auctions.js
 auth.js
 bids.js
+uploads.js
 users.js
 
 ./src/services:
@@ -80,3 +84,7 @@ users.js
 bids.js
 
 ./src/utils:
+
+./tmp_uploads:
+
+./uploads:

@@ -15,7 +15,7 @@ const Login = () => {
       // hand off to your AuthContext.login()
       await login(email, password);
       // no need to navigate or write to localStorage here—
-      // AuthContext.login does that and moves you to /dashboard
+      // AuthContext.login does that and moves you to /
     } catch (err) {
       // AuthContext.login will throw if axios fails
       setError(err.response?.data?.message || 'Login failed');
