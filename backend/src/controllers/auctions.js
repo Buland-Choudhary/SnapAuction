@@ -34,6 +34,7 @@ export const getAll = async (req, res) => {
         seller: { select: { id: true, name: true } },
       },
     });
+    console.log('Fetched all auctions:', auctions.length);
     res.json(auctions);
   } catch (err) {
     console.error('❌ Failed to fetch auctions:', err);
@@ -122,7 +123,9 @@ export const createAuction = async (req, res) => {
       startTime, endTime
     } = req.body;
 
+    
     const files = Array.isArray(req.files) ? req.files : [];
+    console.log('Uploading files:', files.map(f => ({ name: f.originalname, path: f.path })));
     // 2. Upload each file to Cloudinary
     const uploaded = await Promise.all(
       files.map(f =>

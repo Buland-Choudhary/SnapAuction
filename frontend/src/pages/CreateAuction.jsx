@@ -28,8 +28,14 @@ export default function CreateAuction() {
       if (data.maxIncrement) {
         formData.append("maxIncrement", data.maxIncrement);
       }
-      formData.append("startTime", data.startTime);
-      formData.append("endTime", data.endTime);
+
+      // ⬇️ Convert local datetime to UTC ISO string
+      const startUTC = new Date(data.startTime).toISOString();
+      const endUTC = new Date(data.endTime).toISOString();
+
+      formData.append("startTime", startUTC);
+      formData.append("endTime", endUTC);
+
       for (let i = 0; i < data.images.length; i++) {
         formData.append("images", data.images[i]);
       }

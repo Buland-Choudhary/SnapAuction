@@ -2,9 +2,21 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
-console.log('🔌 Connecting to DB:', process.env.DATABASE_URL);
-const prisma = new PrismaClient();
+if (!process.env.DATABASE_URL) {
+  throw new Error('❌ DATABASE_URL is undefined!');
+}
 
+try {
+  new URL(process.env.DATABASE_URL);
+  console.log('✅ DATABASE_URL is a valid URI');
+} catch (e) {
+  console.error('❌ DATABASE_URL is NOT a valid URI:', process.env.DATABASE_URL);
+  process.exit(1);
+}
+
+const prisma = new PrismaClient();
+await prisma.$connect();
+console.log('✅ Connected to DB');
 // Time helpers
 function minutesFromNow(mins) {
   return new Date(Date.now() + mins * 60 * 1000);
@@ -33,19 +45,21 @@ async function main() {
 
   console.log('👥 Creating users...');
   const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Heidi'];
-  const users = await Promise.all(
-    names.map((name, i) =>
-      prisma.user.create({
-        data: {
-          name,
-          email: `${name.toLowerCase()}@example.com`,
-          passwordHash,
-          role: i === 1 ? 'ADMIN' : 'USER',
-          createdAt: minutesAgo(120 - i * 10),
-        },
-      })
-    )
-  );
+  const users = [];
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i];
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email: `${name.toLowerCase()}@example.com`,
+        passwordHash,
+        role: i === 1 ? 'ADMIN' : 'USER',
+        createdAt: minutesAgo(120 - i * 10),
+      },
+    });
+    users.push(user);
+  }
+
 
   console.log('📦 Seeding auctions with varied timings...');
   const auctionData = [
@@ -58,7 +72,7 @@ async function main() {
       startTime: minutesAgo(90),
       endTime: minutesFromNow(120),
       sellerId: users[0].id,
-      images: ['https://example.com/watch1.jpg', 'https://example.com/watch2.jpg'],
+      images: ['https://picsum.photos/400/300', 'https://picsum.photos/400/300'],
     },
     {
       title: 'MacBook Pro M1',
@@ -68,7 +82,7 @@ async function main() {
       startTime: minutesAgo(30),
       endTime: minutesFromNow(150),
       sellerId: users[1].id,
-      images: ['https://example.com/mac1.jpg'],
+      images: ['https://picsum.photos/400/300'],
     },
     // Upcoming auctions
     {
@@ -79,7 +93,7 @@ async function main() {
       startTime: daysFromNow(1),
       endTime: daysFromNow(5),
       sellerId: users[2].id,
-      images: ['https://example.com/ps5.jpg'],
+      images: ['https://picsum.photos/400/300'],
     },
     {
       title: 'Electric Guitar',
@@ -89,7 +103,7 @@ async function main() {
       startTime: daysFromNow(2),
       endTime: daysFromNow(4),
       sellerId: users[3].id,
-      images: ['https://example.com/guitar.jpg'],
+      images: ['https://picsum.photos/400/300'],
     },
     // Past auctions
     {
@@ -101,7 +115,7 @@ async function main() {
       endTime: daysAgo(1),
       isClosed: true,
       sellerId: users[4].id,
-      images: ['https://example.com/vase.jpg'],
+      images: ['https://picsum.photos/400/300'],
       winnerId: users[5].id,
     },
     {
@@ -113,7 +127,7 @@ async function main() {
       endTime: minutesAgo(10),
       isClosed: true,
       sellerId: users[5].id,
-      images: ['https://example.com/headphones.jpg'],
+      images: ['https://picsum.photos/400/300'],
       winnerId: users[0].id,
     },
   ];

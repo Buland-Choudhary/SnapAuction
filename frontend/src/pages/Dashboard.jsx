@@ -6,7 +6,25 @@ export default function Dashboard() {
 
   useEffect(() => {
     axios.get("/users/dashboard").then((res) => {
-      setDashboard(res.data);
+      const data = res.data;
+      setDashboard({
+        ...data,
+        created: data.created.map((a) => ({
+          ...a,
+          endTime: new Date(a.endTime).toLocaleString(),
+        })),
+        follows: data.follows.map((a) => ({
+          ...a,
+          endTime: new Date(a.endTime).toLocaleString(),
+        })),
+        bids: data.bids.map((b) => ({
+          ...b,
+          auction: {
+            ...b.auction,
+            endTime: new Date(b.auction.endTime).toLocaleString(),
+          },
+        })),
+      });
     });
   }, []);
 
