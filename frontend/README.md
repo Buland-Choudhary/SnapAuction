@@ -1,12 +1,67 @@
-# React + Vite
+# SnapAuction Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend for SnapAuction, built with React, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Folder Structure
 
-## Expanding the ESLint configuration
+```
+frontend/
+├── public/             # Static assets
+├── src/
+│   ├── api/            # API abstraction (axios instance)
+│   ├── assets/         # Images and static assets
+│   ├── components/     # Reusable React components (navbar, ProtectedRoute)
+│   ├── context/        # React context (Auth, Socket)
+│   ├── pages/          # Main app pages (Home, Login, Signup, Dashboard, Auction...)
+│   ├── App.jsx         # Main app component
+│   ├── main.jsx        # Entry point
+│   ├── App.css         # App-wide styles
+│   └── index.css       # Tailwind base styles
+├── package.json        # Frontend dependencies and scripts
+└── ...
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Useful Commands
+
+- Start development server:  
+  `npm run dev`
+- Build for production:  
+  `npm run build`
+- Preview production build:  
+  `npm run preview`
+- Lint code:  
+  `npm run lint`
+
+---
+
+## Environment Variables
+
+By default, the API base URL is set in `src/api/axios.js`:
+
+To use a local backend during development, update the `baseURL` in `src/api/axios.js` or use an environment variable if you refactor for dynamic config.
+
+---
+
+## Backend URL
+
+- The frontend expects the backend API to be available at the URL specified in `src/api/axios.js`.
+- Update this URL if you deploy the backend elsewhere or run it locally.
+
+---
+
+## Features
+
+- User authentication (login/signup)
+- Real-time auctions and bidding (Socket.io)
+- Dashboard, auction creation, and live auction pages
+- Protected routes and context-based state management
+
+---
+
+## More Info
+
+See the [project root README](../README.md) for setup instructions and project overview.

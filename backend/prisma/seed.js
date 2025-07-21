@@ -44,7 +44,7 @@ async function main() {
   const passwordHash = await bcrypt.hash('secret123', saltRounds);
 
   console.log('👥 Creating users...');
-  const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Heidi'];
+  const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Heidi', 'Ivan', 'Judy', 'Mallory', 'Niaj'];
   const users = [];
   for (let i = 0; i < names.length; i++) {
     const name = names[i];
@@ -60,77 +60,57 @@ async function main() {
     users.push(user);
   }
 
-
-  console.log('📦 Seeding auctions with varied timings...');
-  const auctionData = [
-    // Live auctions
-    {
-      title: 'Vintage Rolex Watch',
-      description: 'Timeless Submariner, still ticking.',
-      basePrice: 500,
-      minIncrement: 25,
-      startTime: minutesAgo(90),
-      endTime: minutesFromNow(120),
-      sellerId: users[0].id,
-      images: ['https://picsum.photos/400/300', 'https://picsum.photos/400/300'],
-    },
-    {
-      title: 'MacBook Pro M1',
-      description: '2021 model, excellent condition.',
-      basePrice: 1200,
-      minIncrement: 50,
-      startTime: minutesAgo(30),
-      endTime: minutesFromNow(150),
-      sellerId: users[1].id,
-      images: ['https://picsum.photos/400/300'],
-    },
-    // Upcoming auctions
-    {
-      title: 'PlayStation 5 Console',
-      description: 'Brand new, unopened.',
-      basePrice: 400,
-      minIncrement: 20,
-      startTime: daysFromNow(1),
-      endTime: daysFromNow(5),
-      sellerId: users[2].id,
-      images: ['https://picsum.photos/400/300'],
-    },
-    {
-      title: 'Electric Guitar',
-      description: 'Fender Stratocaster, sunburst finish.',
-      basePrice: 700,
-      minIncrement: 30,
-      startTime: daysFromNow(2),
-      endTime: daysFromNow(4),
-      sellerId: users[3].id,
-      images: ['https://picsum.photos/400/300'],
-    },
-    // Past auctions
-    {
-      title: 'White Vase',
-      description: 'Small beautiful vase, perfect for decor.',
-      basePrice: 300,
-      minIncrement: 15,
-      startTime: daysAgo(5),
-      endTime: daysAgo(1),
+  // Evergreen auction timing logic
+  // 4 live, 4 upcoming, 4 recently ended
+  const now = new Date();
+  function randomImage() {
+    // Use picsum for variety
+    return `https://picsum.photos/seed/${Math.floor(Math.random()*10000)}/400/300`;
+  }
+  const auctionData = [];
+  // Live auctions (start: 1-2h ago, end: 2-4h from now)
+  for (let i = 0; i < 4; i++) {
+    auctionData.push({
+      title: `Live Auction #${i+1}`,
+      description: `This is a live auction for item #${i+1}.`,
+      basePrice: 100 + i * 50,
+      minIncrement: 10 + i * 5,
+      startTime: minutesAgo(120 - i * 20),
+      endTime: minutesFromNow(120 + i * 30),
+      sellerId: users[i].id,
+      images: [randomImage(), randomImage()],
+      isClosed: false,
+    });
+  }
+  // Upcoming auctions (start: 1-4 days from now, end: 2-6 days from now)
+  for (let i = 0; i < 4; i++) {
+    auctionData.push({
+      title: `Upcoming Auction #${i+1}`,
+      description: `This is an upcoming auction for item #${i+1}.`,
+      basePrice: 200 + i * 60,
+      minIncrement: 15 + i * 5,
+      startTime: daysFromNow(1 + i),
+      endTime: daysFromNow(2 + i),
+      sellerId: users[4 + i].id,
+      images: [randomImage()],
+      isClosed: false,
+    });
+  }
+  // Recently ended auctions (start: 5-8 days ago, end: 1-4 days ago)
+  for (let i = 0; i < 4; i++) {
+    auctionData.push({
+      title: `Ended Auction #${i+1}`,
+      description: `This is a recently ended auction for item #${i+1}.`,
+      basePrice: 150 + i * 40,
+      minIncrement: 12 + i * 4,
+      startTime: daysAgo(8 - i),
+      endTime: daysAgo(4 - i),
+      sellerId: users[8 + i].id,
+      images: [randomImage(), randomImage(), randomImage()],
       isClosed: true,
-      sellerId: users[4].id,
-      images: ['https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005620/antiqueVase_xgbvm1.jpg'],
-      winnerId: users[5].id,
-    },
-    {
-      title: 'Wireless Headphones',
-      description: 'Noise-cancelling, over-ear.',
-      basePrice: 200,
-      minIncrement: 20,
-      startTime: minutesAgo(120),
-      endTime: minutesAgo(10),
-      isClosed: true,
-      sellerId: users[5].id,
-      images: ['https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005617/wirelessHeadphones1_ditgch.jpg', 'https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005616/wirelessHeadphones2_rzgtmv.jpg', 'https://res.cloudinary.com/dg4zvjzp8/image/upload/v1753005615/headphones3_ysdosi.jpg'],
-      winnerId: users[0].id,
-    },
-  ];
+      winnerId: users[(i+2)%users.length].id,
+    });
+  }
 
   const auctions = [];
   for (const data of auctionData) {
@@ -154,56 +134,74 @@ async function main() {
     );
   }
 
-  console.log('💰 Seeding bids across live and past auctions...');
-  const bidEntries = [
-    // for Vintage Watch
-    { auction: auctions[0], user: users[2], amount: 550, time: minutesAgo(80) },
-    { auction: auctions[0], user: users[3], amount: 600, time: minutesAgo(70) },
-    { auction: auctions[1], user: users[0], amount: 1250, time: minutesAgo(20) },
-    // past
-    { auction: auctions[4], user: users[1], amount: 350, time: daysAgo(4) },
-    { auction: auctions[5], user: users[2], amount: 250, time: minutesAgo(100) },
-  ];
-
-   for (const { auction, user, amount, time } of bidEntries) {
-    // 1. Create the bid
-    const bid = await prisma.bid.create({
-      data: {
-        auctionId: auction.id,
-        userId: user.id,
-        amount,
-        createdAt: time,
-      },
-    });
-
-    // 2. If the bid is higher than currentPrice, update currentPrice
-    if (amount > auction.currentPrice) {
-      await prisma.auction.update({
-        where: { id: auction.id },
+  // Bids: Each auction gets 2-4 bids from different users
+  console.log('💰 Seeding bids across all auctions...');
+  let bidId = 1;
+  for (let i = 0; i < auctions.length; i++) {
+    const auction = auctions[i];
+    const numBids = 2 + (i % 3); // 2-4 bids
+    let lastAmount = auction.basePrice;
+    for (let j = 0; j < numBids; j++) {
+      // Pick a user who is not the seller
+      let bidderIdx = (i + j + 1) % users.length;
+      if (users[bidderIdx].id === auction.sellerId) {
+        bidderIdx = (bidderIdx + 1) % users.length;
+      }
+      const increment = auction.minIncrement + Math.floor(Math.random() * 10);
+      lastAmount += increment;
+      // Bid time: spread out over auction duration
+      let bidTime;
+      if (auction.isClosed) {
+        bidTime = new Date(
+          auction.startTime.getTime() +
+            ((auction.endTime.getTime() - auction.startTime.getTime()) * (j+1)) / (numBids+1)
+        );
+      } else {
+        bidTime = new Date(
+          auction.startTime.getTime() +
+            ((now.getTime() - auction.startTime.getTime()) * (j+1)) / (numBids+1)
+        );
+      }
+      await prisma.bid.create({
         data: {
-          currentPrice: amount,
-          // Update winner if auction is closed (optional logic)
-          ...(auction.isClosed ? { winnerId: user.id } : {}),
+          auctionId: auction.id,
+          userId: users[bidderIdx].id,
+          amount: lastAmount,
+          createdAt: bidTime,
         },
       });
+      // Update currentPrice and winner for closed auctions
+      if (lastAmount > auction.currentPrice) {
+        await prisma.auction.update({
+          where: { id: auction.id },
+          data: {
+            currentPrice: lastAmount,
+            ...(auction.isClosed ? { winnerId: users[bidderIdx].id } : {}),
+          },
+        });
+      }
+      bidId++;
     }
   }
 
-  console.log('⭐ Seeding follows for users...');
-  const followEntries = [
-    { auction: auctions[0], user: users[4], time: minutesAgo(50) },
-    { auction: auctions[1], user: users[5], time: minutesAgo(10) },
-    { auction: auctions[2], user: users[0], time: minutesAgo(5) },
-  ];
-
-  for (const { auction, user, time } of followEntries) {
-    await prisma.follow.create({
-      data: {
-        auctionId: auction.id,
-        userId: user.id,
-        createdAt: time,
-      },
-    });
+  // Follows: Each auction gets 1-3 followers
+  console.log('⭐ Seeding follows for all auctions...');
+  for (let i = 0; i < auctions.length; i++) {
+    const auction = auctions[i];
+    const numFollows = 1 + (i % 3); // 1-3 follows
+    for (let j = 0; j < numFollows; j++) {
+      let followerIdx = (i + j + 3) % users.length;
+      if (users[followerIdx].id === auction.sellerId) {
+        followerIdx = (followerIdx + 1) % users.length;
+      }
+      await prisma.follow.create({
+        data: {
+          auctionId: auction.id,
+          userId: users[followerIdx].id,
+          createdAt: minutesAgo(10 * (j + 1)),
+        },
+      });
+    }
   }
 
   console.log('✅ Database seeded successfully!');

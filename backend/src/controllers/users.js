@@ -8,18 +8,15 @@ const prisma = new PrismaClient();
  */
 export const getDashboard = async (req, res) => {
   const userId = req.user.id;
-
   try {
+    console.log(`[USERS] Fetching dashboard for user ${userId}`);
     const [created, followsRaw, rawBids, wins] = await prisma.$transaction(
       async (tx) => {
-        // 1) Auctions this user created
         const created = await tx.auction.findMany({
           where: { sellerId: userId },
           orderBy: { createdAt: "desc" },
           include: { images: true },
         });
-
-        // 2) Auctions this user follows
         const followsRaw = await tx.follow.findMany({
           where: { userId },
           include: {
@@ -32,8 +29,6 @@ export const getDashboard = async (req, res) => {
           },
           orderBy: { createdAt: "desc" },
         });
-
-        // 3) Bids this user has placed, now including auction.currentPrice
         const rawBids = await tx.bid.findMany({
           where: { userId },
           include: {
@@ -42,14 +37,12 @@ export const getDashboard = async (req, res) => {
                 id: true,
                 title: true,
                 endTime: true,
-                currentPrice: true,    // ← include this
+                currentPrice: true,
               },
             },
           },
           orderBy: { createdAt: "desc" },
         });
-
-        // 4) Auctions this user has won
         const wins = await tx.auction.findMany({
           where: { winnerId: userId },
           include: {
@@ -58,44 +51,41 @@ export const getDashboard = async (req, res) => {
           },
           orderBy: { endTime: "desc" },
         });
-
         return [created, followsRaw, rawBids, wins];
       },
       { maxWait: 5000, timeout: 30000 }
     );
-
-    // flatten followed auctions
     const follows = followsRaw.map((f) => f.auction);
-
-    // annotate each bid with isHighest
     const bids = rawBids.map((b) => ({
       ...b,
       isHighest: b.amount === b.auction.currentPrice,
     }));
-
+    console.log(`[USERS] Dashboard data ready for user ${userId}`);
     res.json({ created, follows, bids, wins });
   } catch (err) {
-    console.error("❌ getDashboard error:", err);
+    console.error("[USERS] getDashboard error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 /**
  * GET /users/me/bids
  */
 export const getUserBids = async (req, res) => {
   try {
+    const userId = req.user.id;
+    console.log(`[USERS] Fetching bids for user ${userId}`);
     const bids = await prisma.bid.findMany({
-      where: { userId: req.user.id },
+      where: { userId },
       include: {
         auction: { select: { id: true, title: true, endTime: true } },
       },
       orderBy: { createdAt: "desc" },
     });
+    console.log(`[USERS] Found ${bids.length} bids for user ${userId}`);
     res.json(bids);
   } catch (err) {
-    console.error("❌ getUserBids error:", err);
+    console.error("[USERS] getUserBids error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -105,14 +95,17 @@ export const getUserBids = async (req, res) => {
  */
 export const getUserAuctions = async (req, res) => {
   try {
+    const userId = req.user.id;
+    console.log(`[USERS] Fetching auctions for user ${userId}`);
     const auctions = await prisma.auction.findMany({
-      where: { sellerId: req.user.id },
+      where: { sellerId: userId },
       orderBy: { createdAt: "desc" },
       include: { images: true },
     });
+    console.log(`[USERS] Found ${auctions.length} auctions for user ${userId}`);
     res.json(auctions);
   } catch (err) {
-    console.error("❌ getUserAuctions error:", err);
+    console.error("[USERS] getUserAuctions error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };

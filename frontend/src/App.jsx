@@ -11,9 +11,9 @@ import CreateAuction from "./pages/CreateAuction";
 
 const App = () => {
   return (
-    <>
+    <div className="app-container">
       <Navbar />
-      <div className="p-4">
+      <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auction/:id" element={<AuctionDetail />} />
@@ -31,10 +31,17 @@ const App = () => {
             path="/create-auction"
             element={<ProtectedRoute><CreateAuction /></ProtectedRoute>}
           />
-          <Route path="*" element={<div className="p-6">404 Not Found</div>} />
+          <Route path="*" element={
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+              <div className="text-center text-white">
+                <h1 className="text-4xl font-bold mb-4">404</h1>
+                <p className="text-xl">Page Not Found</p>
+              </div>
+            </div>
+          } />
         </Routes>
-      </div>
-    </>
+      </main>
+    </div>
   );
 };
 

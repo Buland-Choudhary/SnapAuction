@@ -1,14 +1,33 @@
 .:
+coverage
 folders.txt
+jest.config.mjs
 node_modules
 package.json
 package-lock.json
 prisma
+README.md
 sample.jpg
 src
 testPrismaConnection.js
+tests
 tmp_uploads
-uploads
+
+./coverage:
+clover.xml
+coverage-final.json
+lcov.info
+lcov-report
+
+./coverage/lcov-report:
+base.css
+block-navigation.js
+favicon.png
+index.html
+prettify.css
+prettify.js
+sort-arrow-sprite.png
+sorter.js
 
 ./prisma:
 schema.prisma
@@ -22,6 +41,7 @@ index.js
 middleware
 routes
 services
+socket.js
 sockets
 utils
 
@@ -85,6 +105,19 @@ bids.js
 
 ./src/utils:
 
-./tmp_uploads:
+./tests:
+controllers
+middleware
+routes
+utils
 
-./uploads:
+./tests/controllers:
+auctions.test.js
+
+./tests/middleware:
+
+./tests/routes:
+
+./tests/utils:
+
+./tmp_uploads:

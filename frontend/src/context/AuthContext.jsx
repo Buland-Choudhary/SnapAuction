@@ -7,25 +7,43 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
   const navigate = useNavigate();
 
   const login = async (email, password) => {
-    const res = await axios.post("/auth/login", { email, password });
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-    navigate("/");
+    setAuthError("");
+    try {
+      const res = await axios.post("/auth/login", { email, password });
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data.user);
+      console.log(`[AUTH] User logged in: ${res.data.user.email}`);
+      navigate("/");
+    } catch (err) {
+      console.error("[AUTH] Login error:", err);
+      setAuthError(err.response?.data?.message || "Login failed");
+      throw err;
+    }
   };
 
   const signup = async (name, email, password) => {
-    const res = await axios.post("/auth/signup", { name, email, password });
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-    navigate("/");
+    setAuthError("");
+    try {
+      const res = await axios.post("/auth/signup", { name, email, password });
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data.user);
+      console.log(`[AUTH] User signed up: ${res.data.user.email}`);
+      navigate("/");
+    } catch (err) {
+      console.error("[AUTH] Signup error:", err);
+      setAuthError(err.response?.data?.message || "Signup failed");
+      throw err;
+    }
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
+    console.log("[AUTH] User logged out");
     navigate("/login");
   };
 
@@ -33,8 +51,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.get("/auth/me");
       setUser(res.data.user);
-    } catch {
+    } catch (err) {
       setUser(null);
+      if (err.response) {
+        console.warn("[AUTH] fetchUser error:", err.response.data.message);
+      }
     }
   };
 
@@ -44,12 +65,11 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       return;
     }
-
     fetchUser().finally(() => setLoading(false));
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading, authError }}>
       {children}
     </AuthContext.Provider>
   );

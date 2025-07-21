@@ -47,8 +47,13 @@ export default function CreateAuction() {
       reset();
       navigate(`/auction/${res.data.id}`);
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Failed to create auction.");
+      if (err.response) {
+        console.error('[CreateAuction] API error:', err.response.data?.message, err.response);
+        setError(err.response.data?.message || "Failed to create auction.");
+      } else {
+        console.error('[CreateAuction] Network or unknown error:', err);
+        setError("Failed to create auction. Please check your connection or try again.");
+      }
     } finally {
       setSubmitting(false);
     }
