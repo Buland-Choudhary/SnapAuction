@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("token", res.data.token);
       setUser(res.data.user);
       console.log(`[AUTH] User logged in: ${res.data.user.email}`);
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       console.error("[AUTH] Login error:", err);
       setAuthError(err.response?.data?.message || "Login failed");

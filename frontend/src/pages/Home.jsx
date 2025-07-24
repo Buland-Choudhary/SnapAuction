@@ -24,6 +24,7 @@ import { useAuth } from "../context/AuthContext";
 import AuctionCard from "../components/AuctionCard";
 import { AuctionGridSkeleton } from "../components/AuctionCardSkeleton";
 import AuctionFilters from "../components/AuctionFilters";
+import Footer from "../components/Footer";
 
 const fetchAuctions = async () => {
   try {
@@ -398,6 +399,8 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      <Footer />
     </>
   );
 }

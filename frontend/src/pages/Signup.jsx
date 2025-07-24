@@ -110,7 +110,7 @@ export default function Signup() {
       
       // Show success message briefly before redirect
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
       }, 2000);
     } catch (err) {
       const errorMessage = err.response?.data?.message || authError || "Signup failed";

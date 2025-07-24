@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "../api/axios";
 import React from "react";
 import DashboardLayout from "../components/DashboardLayout";
+import Footer from "../components/Footer";
 import { 
   TrendingUp, 
   Gavel, 
@@ -288,6 +289,7 @@ export default function Dashboard() {
           </SectionCard>
         )}
       </div>
+      <Footer />
     </DashboardLayout>
   );
 }
