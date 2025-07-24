@@ -50,3 +50,20 @@ SnapAuction/
 - [Backend Documentation](backend/README.md)
 - [Frontend Documentation](frontend/README.md)
 
+## Images
+
+### Login Page
+![Login Page](images/login.png)
+
+### Landing Page
+![Landing Page](images/home.png)
+
+### Dashboard Page
+![Login Page](images/dashboard.png)
+
+### Auctions Page
+![Landing Page](images/auctions.png)
+
+### Create Auction Page
+![Landing Page](images/createauction.png)
+
