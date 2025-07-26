@@ -1,7 +1,7 @@
 .:
 coverage
 folders.txt
-jest.config.mjs
+jest.config.js
 node_modules
 package.json
 package-lock.json
@@ -22,12 +22,41 @@ lcov-report
 ./coverage/lcov-report:
 base.css
 block-navigation.js
+config
+controllers
 favicon.png
 index.html
+middleware
 prettify.css
 prettify.js
+routes
 sort-arrow-sprite.png
 sorter.js
+
+./coverage/lcov-report/config:
+cloudinary.js.html
+index.html
+
+./coverage/lcov-report/controllers:
+admin.js.html
+auctions.js.html
+auth.js.html
+bids.js.html
+index.html
+users.js.html
+
+./coverage/lcov-report/middleware:
+auth.js.html
+index.html
+upload.js.html
+
+./coverage/lcov-report/routes:
+admin.js.html
+auctions.js.html
+auth.js.html
+bids.js.html
+index.html
+users.js.html
 
 ./prisma:
 schema.prisma
@@ -112,9 +141,14 @@ routes
 utils
 
 ./tests/controllers:
+admin.test.js
 auctions.test.js
+auth.test.js
+bids.test.js
+users.test.js
 
 ./tests/middleware:
+auth.test.js
 
 ./tests/routes:
 

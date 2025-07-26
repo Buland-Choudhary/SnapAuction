@@ -1,7 +1,10 @@
 .:
+DESIGN_SYSTEM_AUDIT.md
+dist
 eslint.config.js
 folders.txt
 index.html
+NAVIGATION_LAYOUT_IMPROVEMENTS.md
 node_modules
 package.json
 package-lock.json
@@ -12,8 +15,17 @@ src
 tailwind.config.js
 vite.config.js
 
-./public:
+./dist:
+assets
+index.html
 vite.svg
+
+./dist/assets:
+index-DGuDd048.css
+index-XoM3oBqT.js
+
+./public:
+favicon.png
 
 ./src:
 api
@@ -25,23 +37,53 @@ context
 index.css
 main.jsx
 pages
+styles
 
 ./src/api:
 axios.js
 
 ./src/assets:
-react.svg
 
 ./src/components:
+AuctionCard.jsx
+AuctionCardSkeleton.jsx
+AuctionEnhancementsShowcase.jsx
+AuctionFilters.jsx
+AuctionImageGallery.jsx
+AuctionInfo.jsx
+BidSection.jsx
+Container.jsx
+CountdownTimer.jsx
+DarkModeToggle.jsx
+DashboardLayout.jsx
+DashboardStats.jsx
+EnhancedNavbar.jsx
+FloatingLabelInput.jsx
+Footer.jsx
+ForgotPassword.jsx
+Modal.jsx
 navbar.jsx
+PageLayout.jsx
 ProtectedRoute.jsx
+SocialLogin.jsx
+UserProfile.jsx
 
 ./src/context:
 AuthContext.jsx
+SocketContext.jsx
 
 ./src/pages:
 AuctionDetail.jsx
+AuctionLiveSection.jsx
+AuctionStaticInfo.jsx
+CreateAuction.jsx
 Dashboard.jsx
 Home.jsx
 Login.jsx
+NewDashboard.jsx
 Signup.jsx
+
+./src/styles:
+components.js
+constants.js
+theme.js

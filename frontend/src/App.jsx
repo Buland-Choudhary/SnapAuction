@@ -8,11 +8,14 @@ import AuctionDetail from "./pages/AuctionDetail";
 import Navbar from "./components/navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CreateAuction from "./pages/CreateAuction";
+import VisitNotifier from "./components/VisitNotifier";
+
 
 const App = () => {
   return (
     <div className="app-container">
       <Navbar />
+      <VisitNotifier /> {/* ← Notification happens here */}
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
